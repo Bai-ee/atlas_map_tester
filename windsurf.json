@@ -1,0 +1,28 @@
+{
+    "rules": [
+        {
+            "id": "no_server_start",
+            "description": "Do not start servers - prompt user to use Live Server instead",
+            "severity": "high"
+        },
+        {
+            "id": "use_absolute_paths",
+            "description": "Always use absolute paths when creating or modifying files",
+            "severity": "medium"
+        },
+        {
+            "id": "maintain_viewport_scaling",
+            "description": "Ensure viewport scaling is maintained in HTML/CSS implementations",
+            "severity": "medium"
+        },
+        {
+            "id": "phaser_best_practices",
+            "description": "Follow Phaser.io best practices for game development",
+            "severity": "high"
+        }
+    ],
+    "preferences": {
+        "server": "live-server",
+        "defaultPort": 5500
+    }
+}

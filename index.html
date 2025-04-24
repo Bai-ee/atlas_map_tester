@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Top Down Map Game</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined');
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #game-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        #game {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+        }
+        canvas {
+            display: block;
+            margin: auto;
+        }
+        .ui-overlay {
+            position: fixed;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 5px;
+            font-family: monospace;
+            z-index: 1000;
+            min-width: 200px;
+        }
+        .controls-container {
+            position: fixed;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+        .toggle-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            align-items: stretch;
+        }
+        .zoom-control {
+            position: fixed;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+            min-height: fit-content;
+        }
+        .zoom-slider-container {
+            transform: rotate(360deg);
+            width: 150px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .zoom-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 4px;
+            background: rgba(0, 255, 0, 0.3);
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+            accent-color: #00ff00;
+            cursor: pointer;
+        }
+        /* Styling for Firefox */
+        .zoom-slider::-moz-range-thumb {
+            background: #006600;
+            border: 2px solid #00ff00;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .zoom-slider::-moz-range-track {
+            background: rgba(0, 255, 0, 0.3);
+            height: 4px;
+        }
+        /* Styling for Chrome/Safari */
+        .zoom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            background: #006600;
+            border: 2px solid #00ff00;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+        .zoom-slider::-webkit-slider-runnable-track {
+            background: rgba(0, 255, 0, 0.3);
+            height: 4px;
+            border: none;
+        }
+        .zoom-label {
+            text-align: center;
+            color: white;
+            font-family: monospace;
+            writing-mode: vertical-rl;
+            transform: rotate(-90deg);
+            margin: 0px 0;
+            font-size: 30px;
+        }
+        .toggle-btn {
+            background: #444;
+            color: white;
+            border: none;
+            padding: 8px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: monospace;
+            white-space: nowrap;
+            text-align: left;
+            width: 120px;
+            font-size: 10px;
+            text-align: center;
+        }
+        .toggle-btn.active {
+            background: #00ff00;
+            color: black;
+        }
+        .ui-toggle {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 2000;
+            transition: background-color 0.3s;
+        }
+        .ui-toggle:hover {
+            background: rgba(0, 255, 0, 0.3);
+        }
+        .ui-toggle .material-symbols-outlined {
+            color: #00ff00;
+            font-size: 24px;
+        }
+        .ui-hidden .ui-overlay,
+        .ui-hidden .controls-container {
+            display: none !important;
+        }
+        #player-info {
+            top: 20px;
+            left: 20px;
+        }
+        #tile-info {
+            top: 20px;
+            right: 20px;
+        }
+        #map-info {
+            bottom: 20px;
+            left: 20px;
+        }
+        #debug-info {
+            bottom: 20px;
+            right: 20px;
+        }
+        .ui-overlay h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 5px;
+        }
+        .ui-overlay p {
+            margin: 5px 0;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <button id="ui-toggle" class="ui-toggle" title="Toggle UI">
+        <span class="material-symbols-outlined">visibility</span>
+    </button>
+    <div id="game-container">
+        <div id="game"></div>
+        <div class="controls-container">
+            <div class="zoom-control">
+                <!-- <span class="zoom-label" id="zoom-level">1.0x</span> -->
+                <div class="zoom-slider-container">
+                    <input type="range" id="zoom-slider" class="zoom-slider" 
+                           min="0.3" max="1" step="0.01" value="1">
+                </div>
+                <span style="font-family: monospace; color: #00ff00;">ZOOM</span>
+                <span class="zoom-label" id="zoom-level">1.0x</span>
+            
+                <h3 style="color: #ffffff; margin: 5px 0; font-size: 12px; text-transform: uppercase; font-family: monospace; text-align: center;">Asset Information</h3>
+               
+                <p style="margin: 3px 0; font-size: 12px; color: #ffffff; font-family: monospace; text-align: center;">Original Size:<br><span id="original-size">256x328</span></p>
+                <p style="margin: 3px 0; font-size: 12px; color: #ffffff; font-family: monospace; text-align: center;">Current Size:<br><span id="current-size">256x328</span></p>
+                <div style="margin-top: 10px; margin-bottom: 10px; font-family: monospace; font-size: 11px; color: #ffffff; text-align: center;">
+                    <p style="margin: 2px 0; color: #6f6f6f;">Rendering Info</p>
+                    <p style="margin: 2px 0; color: #6f6f6f;">Pixel Art Mode: ON</p>
+                    <p style="margin: 2px 0; color: #6f6f6f;">Anti-alias: <span id="antialias-status">OFF</span></p>
+                    <p style="margin: 2px 0; color: #6f6f6f;">Round Pixels: <span id="roundpx-status">ON</span></p>
+                </div>
+                <div class="toggle-controls">
+                    <button id="toggle-grid" class="toggle-btn active">Grid: ON</button>
+                    <button id="toggle-highlight" class="toggle-btn active">Highlight: ON</button>
+                    <button id="toggle-collider" class="toggle-btn active">Collider: ON</button>
+                    <button id="toggle-crisp" class="toggle-btn active">Crisp: ON</button>
+                    <button id="toggle-pixelperfect" class="toggle-btn active">Pix Perf: ON</button>
+                </div>
+            </div>
+            
+        </div>
+        <div id="player-info" class="ui-overlay" style="top: 10px; left: 10px;">
+            <h3>Player Information</h3>
+            <p>Position: <span id="player-position">X: 0, Y: 0</span></p>
+            <p>Velocity: <span id="player-velocity">X: 0, Y: 0</span></p>
+        </div>
+        <div id="tile-info" class="ui-overlay">
+            <h3>Tile Information</h3>
+            <p>Current Tile: <span id="current-tile">X: 0, Y: 0</span></p>
+            <p>Tile Index: <span id="tile-index">0</span></p>
+        </div>
+        <div id="asset-info" class="ui-overlay" style="position: fixed; right: 10px; top: 50%; transform: translateY(-50%); background: rgba(0, 0, 0, 0.7);">
+            <div id="hover-info">
+                <!-- <h3>Hover Tiles</h3> -->
+                <!-- <div style="color: #666666">Empty Tile</div> -->
+            </div>
+            <h3 style="color: #ffffff; margin: 0 0 5px 0; font-size: 12px; text-transform: uppercase; font-family: monospace;">Active Tiles</h3>
+            <div id="touched-tiles" style="max-height: 200px; overflow-y: auto; font-size: 11px; font-family: monospace; color: #ffffff;"></div>
+        </div>
+        <div id="map-info" class="ui-overlay">
+            <h3>Map Info</h3>
+            <p>Map Size: 3840x3840</p>
+            <p>Tile Size: 32x32</p>
+            <p>Total Tiles: 14,400</p>
+        </div>
+        <div id="debug-info" class="ui-overlay">
+            <h3>Debug Info</h3>
+            <p>FPS: <span id="fps-counter">60</span></p>
+            <p>Camera Position: <span id="camera-position">X: 0, Y: 0</span></p>
+        </div>
+    </div>
+    <script>
+        const MAX_ZOOM_OUT = 0.2; // Adjust this value to change maximum zoom out level
+        document.getElementById('zoom-slider').min = MAX_ZOOM_OUT;
+
+        // UI Toggle functionality
+        const uiToggle = document.getElementById('ui-toggle');
+        const gameContainer = document.getElementById('game-container');
+        const toggleIcon = uiToggle.querySelector('.material-symbols-outlined');
+        let uiVisible = true;
+
+        uiToggle.addEventListener('click', () => {
+            uiVisible = !uiVisible;
+            gameContainer.classList.toggle('ui-hidden');
+            toggleIcon.textContent = uiVisible ? 'visibility' : 'visibility_off';
+        });
+
+        // Add rendering quality controls
+        document.getElementById('toggle-crisp').addEventListener('click', function() {
+            const isActive = this.classList.toggle('active');
+            this.textContent = `Crisp: ${isActive ? 'ON' : 'OFF'}`;
+            document.querySelector('canvas').style.imageRendering = isActive ? 'crisp-edges' : 'auto';
+        });
+
+        document.getElementById('toggle-pixelperfect').addEventListener('click', function() {
+            const isActive = this.classList.toggle('active');
+            this.textContent = `Pixel Perfect: ${isActive ? 'ON' : 'OFF'}`;
+            document.querySelector('canvas').style.imageRendering = isActive ? 'pixelated' : 'auto';
+        });
+
+        // Set initial canvas rendering style
+        document.querySelector('canvas').style.imageRendering = 'pixelated';
+    </script>
+    <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+{
+  "frames": {
+    "Critter": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 328
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 256,
+        "h": 328
+      },
+      "sourceSize": {
+        "w": 256,
+        "h": 328
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "Forge": {
+      "frame": {
+        "x": 256,
+        "y": 0,
+        "w": 2136,
+        "h": 2008
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 2136,
+        "h": 2008
+      },
+      "sourceSize": {
+        "w": 2136,
+        "h": 2008
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "Bush": {
+      "frame": {
+        "x": 2392,
+        "y": 0,
+        "w": 160,
+        "h": 136
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 160,
+        "h": 136
+      },
+      "sourceSize": {
+        "w": 160,
+        "h": 136
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "Tree": {
+      "frame": {
+        "x": 2552,
+        "y": 0,
+        "w": 536,
+        "h": 599
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 536,
+        "h": 599
+      },
+      "sourceSize": {
+        "w": 536,
+        "h": 599
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    "House": {
+      "frame": {
+        "x": 3088,
+        "y": 0,
+        "w": 984,
+        "h": 1136
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 984,
+        "h": 1136
+      },
+      "sourceSize": {
+        "w": 984,
+        "h": 1136
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  },
+  "meta": {
+    "image": "atlas.png",
+    "size": {
+      "w": 4072,
+      "h": 2016
+    },
+    "scale": "1"
+  }
+}
