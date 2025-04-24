@@ -313,6 +313,12 @@ function create() {
     // Store scene reference
     currentScene = this;
 
+    // Set initial canvas rendering style
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+        canvas.style.imageRendering = 'pixelated';
+    }
+
     // Set up toggle button listeners
     document.getElementById('toggle-grid').addEventListener('click', toggleGrid);
     document.getElementById('toggle-highlight').addEventListener('click', toggleHighlight);
