@@ -36,7 +36,21 @@ const game = new Phaser.Game(config);
 let player;
 let cursors;
 let currentTile = { x: 0, y: 0 };
-const TILE_SIZE = 32;
+const TILE_SIZE = 64;
+
+// Spawn location configuration
+const SPAWN_LOCATION = {
+    tileX: 31,      // Current Tile X
+    tileY: 44,      // Current Tile Y
+    tileIndex: 2671 // Tile Index
+};
+
+// Forge location configuration
+const FORGE_LOCATION = {
+    tileX: 15,      // Fixed Forge position
+    tileY: 20,      // Roughly centered but offset from player
+
+};
 
 // Track tiles and objects
 let worldObjects = new Map(); // Key: 'x,y', Value: {object: PhaserObject, type: string}
@@ -48,6 +62,9 @@ let showGrid = true;
 let showHighlight = true;
 let showCollider = true;
 let currentZoom = 1.0;
+let targetX = null;
+let targetY = null;
+const BASE_SPEED = 300; // Base movement speed
 
 // Asset dimensions
 const CRITTER_WIDTH = 256;
@@ -66,12 +83,12 @@ function updateAssetSizes(zoom) {
 
 // Zoom control functions
 function updateZoom(value) {
-    // Clamp zoom value between 0.3 and 1
-    value = Math.max(0.3, Math.min(1, value));
+    // Clamp zoom value between -0.3 and 1
+    value = Math.max(-0.3, Math.min(1, value));
     currentZoom = value;
     if (currentScene) {
         currentScene.cameras.main.setZoom(value);
-        document.getElementById('zoom-level').textContent = value.toFixed(2) + 'x';
+        document.getElementById('zoom-level').textContent = value.toFixed(1) + 'x';
         document.getElementById('zoom-slider').value = value;
         updateAssetSizes(value);
     }
@@ -285,7 +302,7 @@ function preload() {
     // Create a simple tile texture programmatically
     this.load.on('complete', function() {
         const graphics = this.add.graphics();
-        graphics.lineStyle(1, 0x666666);
+        graphics.lineStyle(2, 0x00ff00, 0.3); // Thicker lines with semi-transparent green color
         graphics.strokeRect(0, 0, TILE_SIZE, TILE_SIZE);
         graphics.generateTexture('tile', TILE_SIZE, TILE_SIZE);
         graphics.destroy();
@@ -318,7 +335,7 @@ function create() {
     gameCanvas.addEventListener('touchmove', handleTouchMove, { passive: true });
     gameCanvas.addEventListener('touchend', handleTouchEnd, { passive: true });
     
-    updateZoom(1.0); // Initialize zoom
+    updateZoom(0.4); // Initialize zoom
     // Set up the world bounds
     this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
@@ -335,10 +352,29 @@ function create() {
     // Define object types and their properties
     const objectTypes = [
         { key: 'House', frame: 'House', scale: 1, count: 2, allowPartialOffscreen: true, collidable: true, padding: 200 },
-        { key: 'Forge', frame: 'Forge', scale: 0.8, count: 1, allowPartialOffscreen: true, collidable: true, padding: 200 },
         { key: 'Tree', frame: 'Tree', scale: 1, count: 12, allowPartialOffscreen: false, collidable: true, padding: 150 },
         { key: 'Bush', frame: 'Bush', scale: 1, count: 25, allowPartialOffscreen: false, collidable: false, padding: 80 }
     ];
+    
+    // Place Forge at its designated location
+    const forgeX = (FORGE_LOCATION.tileX * TILE_SIZE);
+    const forgeY = (FORGE_LOCATION.tileY * TILE_SIZE);
+    const forge = this.add.sprite(forgeX, forgeY, 'character', 'Forge');
+    forge.setScale(FORGE_LOCATION.scale);
+    forge.setOrigin(0, 0);
+    
+    // Add Forge to physics world
+    this.physics.add.existing(forge, true);
+    forge.body.setOffset(0, 0);
+    forge.body.setSize(forge.displayWidth, forge.displayHeight);
+    
+    // Store Forge in world objects
+    worldObjects.set(`${FORGE_LOCATION.tileX},${FORGE_LOCATION.tileY}`, {
+        object: forge,
+        type: 'Forge',
+        collidable: true,
+        padding: 200
+    });
 
     // Function to check if a position is valid (no overlap with existing objects)
     const isValidPosition = (x, y, width, height, requiredPadding) => {
@@ -430,10 +466,12 @@ function create() {
         }
     });
 
-    // Add player in the center of the map
-    const centerX = WORLD_WIDTH / 2;
-    const centerY = WORLD_HEIGHT / 2;
-    player = this.add.sprite(centerX, centerY, 'character', 'Critter');
+    // Convert spawn tile coordinates to world coordinates (center of tile)
+    const playerX = (SPAWN_LOCATION.tileX * TILE_SIZE) + (TILE_SIZE / 2);
+    const playerY = (SPAWN_LOCATION.tileY * TILE_SIZE) + (TILE_SIZE / 2);
+    
+    // Add player at the specific tile
+    player = this.add.sprite(playerX, playerY, 'character', 'Critter');
     player.setOrigin(0.5, 0.5);
 
     // Enable physics on the player
@@ -451,8 +489,17 @@ function create() {
 
     // Set up camera
     this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+    this.cameras.main.setScroll(playerX - (this.cameras.main.width / 2), playerY - (this.cameras.main.height / 2));
     this.cameras.main.startFollow(player, true);
-    this.cameras.main.setZoom(1);
+    this.cameras.main.setZoom(0.4); // Match initial zoom level
+    
+    // Update zoom slider to match initial zoom
+    document.getElementById('zoom-slider').value = '0.4';
+    
+    // Update initial tile info
+    currentTile.x = SPAWN_LOCATION.tileX;
+    currentTile.y = SPAWN_LOCATION.tileY;
+    updateTileInfo(SPAWN_LOCATION.tileX, SPAWN_LOCATION.tileY);
 
     // Add debug info
     document.getElementById('debug-info').innerHTML += `
@@ -475,29 +522,58 @@ function create() {
             updateTileInfo(tileX, tileY);
         }
     }, this);
+
+    // Click/tap handler for movement
+    this.input.on('pointerdown', function (pointer) {
+        const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+        targetX = worldPoint.x;
+        targetY = worldPoint.y;
+    }, this);
 }
 
 function update() {
-    const speed = 300;
+    // Calculate speed based on zoom level (faster when zoomed out)
+    const zoomFactor = Math.max(0.1, currentZoom); // Prevent division by zero
+    const speed = BASE_SPEED * (1 / zoomFactor); // Inverse relationship with zoom
 
     // Reset velocity
     player.body.setVelocity(0);
 
-    // Handle movement
-    if (cursors.left.isDown) {
-        player.body.setVelocityX(-speed);
-    } else if (cursors.right.isDown) {
-        player.body.setVelocityX(speed);
+    // Handle click/tap movement if target exists
+    if (targetX !== null && targetY !== null) {
+        const dx = targetX - player.x;
+        const dy = targetY - player.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance > 5) { // Stop when close enough to target
+            const angle = Math.atan2(dy, dx);
+            player.body.setVelocityX(Math.cos(angle) * speed);
+            player.body.setVelocityY(Math.sin(angle) * speed);
+        } else {
+            targetX = null;
+            targetY = null;
+        }
     }
 
-    if (cursors.up.isDown) {
-        player.body.setVelocityY(-speed);
-    } else if (cursors.down.isDown) {
-        player.body.setVelocityY(speed);
-    }
+    // Handle keyboard movement
+    if (targetX === null && targetY === null) { // Only use keyboard if not moving to target
+        if (cursors.left.isDown) {
+            player.body.setVelocityX(-speed);
+        } else if (cursors.right.isDown) {
+            player.body.setVelocityX(speed);
+        }
 
-    // Normalize and scale the velocity so that player can't move faster diagonally
-    player.body.velocity.normalize().scale(speed);
+        if (cursors.up.isDown) {
+            player.body.setVelocityY(-speed);
+        } else if (cursors.down.isDown) {
+            player.body.setVelocityY(speed);
+        }
+
+        // Normalize and scale the velocity so that player can't move faster diagonally
+        if (player.body.velocity.x !== 0 || player.body.velocity.y !== 0) {
+            player.body.velocity.normalize().scale(speed);
+        }
+    }
 
     // Update UI elements
     updatePlayerInfo(player);
