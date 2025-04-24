@@ -1,0 +1,11 @@
+{
+  "name": "atlas-map-trials",
+  "version": "1.0.0",
+  "description": "Atlas Map Testing with Phaser",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "dependencies": {
+    "serve": "^14.2.1"
+  }
+}
