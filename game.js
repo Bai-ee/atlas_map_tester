@@ -324,6 +324,16 @@ function create() {
     document.getElementById('toggle-highlight').addEventListener('click', toggleHighlight);
     document.getElementById('toggle-collider').addEventListener('click', toggleCollider);
     
+    // Set up pixel perfect toggle
+    document.getElementById('toggle-pixelperfect').addEventListener('click', function() {
+        const isActive = this.classList.toggle('active');
+        this.textContent = `Pixel Perfect: ${isActive ? 'ON' : 'OFF'}`;
+        const canvas = document.querySelector('canvas');
+        if (canvas) {
+            canvas.style.imageRendering = isActive ? 'pixelated' : 'auto';
+        }
+    });
+    
     // Set up zoom slider
     const zoomSlider = document.getElementById('zoom-slider');
     zoomSlider.addEventListener('input', (e) => updateZoom(parseFloat(e.target.value)));

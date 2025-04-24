@@ -299,13 +299,7 @@
             document.querySelector('canvas').style.imageRendering = isActive ? 'crisp-edges' : 'auto';
         });
 
-        document.getElementById('toggle-pixelperfect').addEventListener('click', function() {
-            const isActive = this.classList.toggle('active');
-            this.textContent = `Pixel Perfect: ${isActive ? 'ON' : 'OFF'}`;
-            document.querySelector('canvas').style.imageRendering = isActive ? 'pixelated' : 'auto';
-        });
-
-        // Canvas style will be set in game.js after canvas is created
+        // All event listeners are now set up in game.js
     </script>
     <script src="game.js"></script>
 </body>
